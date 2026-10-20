@@ -1,0 +1,5 @@
+results/
+jmeter.log
+*.jtl
+__pycache__/
+.vscode/

@@ -1,0 +1,44 @@
+name: Performance Tests
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+env:
+  JMETER_VERSION: "5.6.2"
+
+jobs:
+  jmeter:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: "17"
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Install JMeter
+        run: |
+          curl -sSLf -o jmeter.tgz "https://archive.apache.org/dist/jmeter/binaries/apache-jmeter-${JMETER_VERSION}.tgz"
+          tar -xzf jmeter.tgz
+          echo "JMETER_HOME=$PWD/apache-jmeter-${JMETER_VERSION}" >> "$GITHUB_ENV"
+
+      - name: Smoke test
+        run: bash scripts/run_load_test.sh smoke
+
+      - name: Load test
+        run: bash scripts/run_load_test.sh load
+
+      - name: Upload JMeter reports
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: jmeter-reports
+          path: results/
+          if-no-files-found: ignore
